@@ -1,5 +1,5 @@
 // Offline cache for Shot List. Bump VERSION when any file changes.
-const VERSION = 'shotlist-v1';
+const VERSION = 'shotlist-v2';
 const FILES = ['./', 'index.html', 'manifest.webmanifest', 'icon-180.png', 'icon-192.png', 'icon-512.png'];
 
 self.addEventListener('install', e => {

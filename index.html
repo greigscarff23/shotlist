@@ -114,7 +114,7 @@ button:focus-visible,input:focus-visible,textarea:focus-visible,summary:focus-vi
 </head>
 <body>
 <div class="wrap" id="app"></div>
-<input type="file" id="notesfile" accept=".json,application/json" hidden>
+<input type="file" id="notesfile" hidden>
 <script>
 (function(){
 'use strict';
@@ -306,7 +306,9 @@ function parseEvents(text){
   });
   return {jobs:out,skipped:skipped};
 }
+function loadNotesText(text){try{var d=JSON.parse(String(text||'').trim());if(d&&d.kind==='filmworx-client-notes'&&d.clients){CN=d;localStorage.setItem(CKEY,JSON.stringify(d));return d.clients.length+' client notes loaded';}}catch(e){}return null;}
 function importText(text){
+  var nm=loadNotesText(text);if(nm)return nm;
   var r=parseEvents(text),added=0,updated=0;
   r.jobs.forEach(function(e){
     var ex=S.jobs.filter(function(j){return norm(j.address)===norm(e.address);})[0];
@@ -340,7 +342,7 @@ function renderImport(){
    '<li>Add it to your Home Screen or say “Hey Siri, Shot List shoots”.</li></ol></details>';
 }
 function readNotesFile(file){
-  var fr=new FileReader();fr.onload=function(){try{var d=JSON.parse(fr.result);if(d.kind!=='filmworx-client-notes'||!d.clients)throw 0;CN=d;localStorage.setItem(CKEY,JSON.stringify(d));toast(d.clients.length+' client notes loaded');render();}catch(e){toast('That isn’t the client notes file');}};fr.readAsText(file);
+  var fr=new FileReader();fr.onload=function(){var m=loadNotesText(fr.result);toast(m||'That isn’t the client notes file');render();};fr.readAsText(file);
 }
 
 /* ---------- Job view ---------- */
