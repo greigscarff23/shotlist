@@ -1,0 +1,467 @@
+<!doctype html>
+<html lang="en-GB">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Shot List</title>
+<meta name="theme-color" content="#0f6b5c">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="default">
+<meta name="apple-mobile-web-app-title" content="Shot List">
+<meta name="robots" content="noindex">
+<link rel="manifest" href="manifest.webmanifest">
+<link rel="apple-touch-icon" href="icon-180.png">
+<link rel="icon" href="icon-192.png">
+<style>
+/* Layout: single phone column; sticky top bar per view; bottom-anchored primary action */
+:root{
+  --bg:#f3f5f4; --card:#ffffff; --fg:#17201d; --muted:#5b6964; --line:#dde3e0;
+  --accent:#0f6b5c; --on-accent:#ffffff; --accent-soft:#e1efeb;
+  --warn:#a3420f; --warn-soft:#fbeee6; --ok:#1d7a3a; --ok-soft:#e3f3e8; --done:#9aa7a2;
+  --f-body:-apple-system,BlinkMacSystemFont,"SF Pro Text","Segoe UI",Roboto,sans-serif;
+  --f-display:-apple-system,BlinkMacSystemFont,"SF Pro Display","Segoe UI",Roboto,sans-serif;
+  --f-mono:ui-monospace,"SF Mono",Menlo,monospace;
+  color-scheme:light;
+}
+@media (prefers-color-scheme: dark){:root{
+  --bg:#0f1513; --card:#18201d; --fg:#e6ece9; --muted:#9aaaa4; --line:#2a3531;
+  --accent:#5cc7b0; --on-accent:#0f1513; --accent-soft:#16302a;
+  --warn:#f0a070; --warn-soft:#33221a; --ok:#7fd69a; --ok-soft:#183324; --done:#5c6a65; color-scheme:dark}}
+*{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+html,body{margin:0}
+body{background:var(--bg);color:var(--fg);font:16px/1.4 var(--f-body);
+  padding:env(safe-area-inset-top,0px) max(16px,env(safe-area-inset-right,0px)) calc(90px + env(safe-area-inset-bottom,0px)) max(16px,env(safe-area-inset-left,0px));}
+body::before{content:"";position:fixed;inset:0 0 auto;height:env(safe-area-inset-top,0px);z-index:20;background:var(--bg)}
+.wrap{max-width:600px;margin:0 auto;display:flex;flex-direction:column;gap:12px}
+.top{position:sticky;top:env(safe-area-inset-top,0px);z-index:10;background:var(--bg);padding-block:12px 10px;display:flex;flex-direction:column;gap:8px;border-bottom:1px solid var(--line)}
+.row{display:flex;align-items:center;gap:10px}
+.grow{flex:1;min-width:0}
+h1{font:700 1.6rem/1.15 var(--f-display);margin:0;letter-spacing:-.01em}
+h2{font:650 1.05rem/1.2 var(--f-display);margin:0}
+h3{font:650 .78rem var(--f-body);text-transform:uppercase;letter-spacing:.07em;color:var(--muted);margin:4px 0 0}
+.muted{color:var(--muted)} .small{font-size:.85rem}
+.trunc{white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+button,select,input,textarea{font:inherit;color:inherit}
+a{color:var(--accent)}
+.btn{border:1px solid var(--line);background:var(--card);border-radius:10px;padding:10px 14px;font-weight:600;cursor:pointer;min-height:44px}
+.btn.primary{background:var(--accent);border-color:var(--accent);color:var(--on-accent)}
+.btn.ghost{background:none;border-color:transparent;color:var(--accent);padding-inline:6px}
+.btn.danger{color:var(--warn)}
+.btn.wide{width:100%}
+.fab{position:fixed;left:50%;transform:translateX(-50%);bottom:calc(16px + env(safe-area-inset-bottom,0px));z-index:15;box-shadow:0 6px 18px rgba(0,0,0,.18);padding-inline:22px;white-space:nowrap}
+.card{background:var(--card);border:1px solid var(--line);border-radius:12px;padding:12px 14px}
+.job{display:flex;flex-direction:column;gap:6px;cursor:pointer;text-align:left;width:100%}
+.job.past{opacity:.7}
+.pill{display:inline-block;font:600 .72rem var(--f-body);text-transform:uppercase;letter-spacing:.06em;padding:2px 8px;border-radius:99px;background:var(--accent-soft);color:var(--accent);white-space:nowrap}
+.pill.hot{background:var(--warn-soft);color:var(--warn)}
+.bar{height:6px;border-radius:99px;background:var(--line);overflow:hidden}
+.bar i{display:block;height:100%;background:var(--accent);border-radius:99px}
+.empty{text-align:center;padding:30px 10px;color:var(--muted)}
+label.f,.f{display:flex;flex-direction:column;gap:5px;font-weight:600;font-size:.9rem}
+input[type=text],textarea{width:100%;border:1px solid var(--line);background:var(--card);border-radius:10px;padding:11px 12px;font-weight:400;font-size:16px}
+textarea{min-height:110px;resize:vertical}
+.seg{display:grid;grid-template-columns:repeat(3,1fr);gap:6px}
+.seg button{border:1px solid var(--line);background:var(--card);border-radius:10px;padding:10px 4px;font-weight:600;min-height:44px}
+.seg button[aria-pressed=true]{background:var(--accent);border-color:var(--accent);color:var(--on-accent)}
+.stepper{display:flex;align-items:center;gap:8px}
+.stepper button{width:40px;height:40px;border-radius:10px;border:1px solid var(--line);background:var(--card);font-size:1.25rem;font-weight:600;line-height:1}
+.stepper b{min-width:1.6em;text-align:center;font:600 1.05rem var(--f-mono);font-variant-numeric:tabular-nums}
+.toggle{display:flex;align-items:center;justify-content:space-between;gap:10px;padding:8px 0;border-top:1px solid var(--line);font-weight:500}
+.toggle:first-of-type{border-top:0}
+.toggle input{width:22px;height:22px;accent-color:var(--accent)}
+.meter{display:flex;align-items:baseline;justify-content:space-between;gap:8px;font-size:.92rem}
+.meter b{font:600 1.05rem var(--f-mono);font-variant-numeric:tabular-nums}
+.status{font-size:.82rem;font-weight:600;padding:3px 8px;border-radius:8px;white-space:nowrap}
+.status.ok{background:var(--ok-soft);color:var(--ok)}
+.status.under{background:var(--accent-soft);color:var(--accent)}
+.status.over{background:var(--warn-soft);color:var(--warn)}
+.tabs{display:grid;grid-template-columns:repeat(3,1fr);gap:4px;background:var(--line);padding:3px;border-radius:10px}
+.tabs button{border:0;background:none;border-radius:8px;padding:8px 4px;font-weight:600;font-size:.9rem;color:var(--muted);min-height:38px}
+.tabs button[aria-pressed=true]{background:var(--card);color:var(--fg);box-shadow:0 1px 2px rgba(0,0,0,.1)}
+details>summary{list-style:none;cursor:pointer}
+details>summary::-webkit-details-marker{display:none}
+details.room>summary{display:flex;align-items:center;gap:10px}
+.chev{transition:transform .15s;color:var(--muted);font-size:.8rem}
+details[open] .chev{transform:rotate(90deg)}
+.cnt{font:600 .8rem var(--f-mono);color:var(--muted);white-space:nowrap}
+.done-room h2{color:var(--done)}
+.shots{list-style:none;margin:10px 0 0;padding:0}
+.shots label{display:flex;gap:12px;align-items:flex-start;padding:9px 0;border-top:1px solid var(--line);cursor:pointer}
+.shots li:first-child label{border-top:0}
+.shots input{width:22px;height:22px;margin:0;accent-color:var(--accent);flex:none}
+.shots input:checked+span>.t{color:var(--done);text-decoration:line-through}
+.tip{display:block;color:var(--muted);font-size:.84rem;margin-top:2px}
+.roomfoot{display:flex;align-items:center;justify-content:space-between;gap:10px;margin-top:10px;padding-top:10px;border-top:1px dashed var(--line);flex-wrap:wrap}
+.rules{background:var(--warn-soft);border:0}
+.rules ul,.notes ul{margin:8px 0 0;padding-left:18px;display:grid;gap:5px;font-size:.92rem}
+.rules strong{color:var(--warn)}
+.alert{background:var(--warn-soft);border:0}
+.alert h2{color:var(--warn)}
+.alert li.key{font-weight:600}
+dl{margin:6px 0 0;display:grid;grid-template-columns:auto 1fr;gap:6px 12px;font-size:.92rem}
+dt{color:var(--muted)} dd{margin:0;min-width:0;overflow-wrap:anywhere}
+.sheet-bg{position:fixed;inset:0;background:rgba(0,0,0,.35);z-index:30;display:flex;align-items:flex-end;justify-content:center}
+.sheet{background:var(--bg);width:100%;max-width:600px;border-radius:16px 16px 0 0;padding:16px max(16px,env(safe-area-inset-right,0px)) calc(20px + env(safe-area-inset-bottom,0px)) max(16px,env(safe-area-inset-left,0px));max-height:88vh;overflow:auto;display:flex;flex-direction:column;gap:10px}
+.grid2{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+.grid2 .btn{text-align:left}
+.toast{position:fixed;left:50%;transform:translateX(-50%);bottom:calc(80px + env(safe-area-inset-bottom,0px));background:var(--fg);color:var(--bg);padding:10px 16px;border-radius:10px;font-weight:600;z-index:40;font-size:.92rem;max-width:90vw;text-align:center}
+ol.steps{margin:6px 0 0;padding-left:20px;display:grid;gap:6px;font-size:.92rem}
+code{font:.85em var(--f-mono);background:var(--accent-soft);padding:1px 5px;border-radius:5px;overflow-wrap:anywhere}
+button:focus-visible,input:focus-visible,textarea:focus-visible,summary:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+@media (prefers-reduced-motion: reduce){.chev{transition:none}}
+</style>
+</head>
+<body>
+<div class="wrap" id="app"></div>
+<input type="file" id="notesfile" accept=".json,application/json" hidden>
+<script>
+(function(){
+'use strict';
+var KEY='fwx-shotapp-v1', CKEY='fwx-clientnotes-v1';
+var PK={basic:{label:'Basic',min:17,max:20},standard:{label:'Standard',min:20,max:25},premium:{label:'Premium',min:40,max:45}};
+
+// Room templates from the Filmworx Photography & Esoft Upload Guidance. def = default uploads.
+var T={
+ front:{label:'Front externals',min:1,max:7,def:{basic:2,standard:3,premium:5},shots:[
+  ['Angled, left','Step back for space round the house. Don’t tilt up.'],
+  ['Angled, right',''],
+  ['Straight-on','No trees, cars or scaffolding blocking the house.'],
+  ['Drone front, varying heights','',1]]},
+ drone:{label:'Drone & area',min:0,max:5,def:{basic:0,standard:1,premium:3},shots:[
+  ['Wide, property centred','Horizon in shot 80–90% of the time.'],
+  ['Top-down','Property lines straight.',1],
+  ['Scene-setters','Street, park, water, hills, landmarks.']]},
+ living:{label:'Living room',min:3,max:4,def:3,shots:[
+  ['Doorway → opposite corner',''],
+  ['Opposite corner → back to door',''],
+  ['Straight-on, symmetrical',''],
+  ['Detail: permanent feature','Fireplace, cornicing, stained glass, flooring. Skip if worn or messy.']]},
+ kitchen:{label:'Kitchen',min:2,max:3,def:2,shots:[
+  ['Wide, angled','Shoot a little higher to show worktops.'],
+  ['Wide, straight-on',''],
+  ['Detail','Range cooker, integrated appliances, tiles.']]},
+ dining:{label:'Dining',min:1,max:2,def:1,shots:[
+  ['Dining in its own frame','Even if open-plan with the kitchen.'],
+  ['Second angle','']]},
+ mainbed:{label:'Main bedroom',min:2,max:3,def:2,shots:[
+  ['Angled wide','Not too high; don’t cut off the bed foot.'],
+  ['Straight-on',''],
+  ['Window view, if worth it','']]},
+ bedroom:{label:'Bedroom',min:1,max:2,def:1,shots:[
+  ['Best angle','Straight-on if possible. Don’t cut off the bed foot.'],
+  ['Second angle, if large','']]},
+ bathroom:{label:'Bathroom',min:1,max:2,def:1,shots:[
+  ['Toilet, sink, bath and shower all visible','One frame should cover it in tight rooms.'],
+  ['Seat down, loo roll tidy','']]},
+ ensuite:{label:'En-suite',min:1,max:2,def:1,shots:[
+  ['Toilet, sink and shower all visible',''],
+  ['Seat down, loo roll tidy','']]},
+ wc:{label:'WC',min:1,max:1,def:1,shots:[
+  ['Portrait: toilet and sink visible',''],
+  ['Seat down, loo roll tidy','']]},
+ utility:{label:'Utility',min:1,max:1,def:1,shots:[
+  ['One clean angle','Away from boots, coats, cleaning stuff.']]},
+ balcony:{label:'Balcony',min:2,max:2,def:2,shots:[
+  ['Balcony space',''],
+  ['The view','']]},
+ garden:{label:'Garden',min:2,max:5,def:2,shots:[
+  ['From the house → end of garden',''],
+  ['End of garden → back to the house',''],
+  ['Selling points','Summer house, BBQ, patio, seating. No washing lines or bins.']]},
+ garage:{label:'Garage & outbuildings',min:2,max:4,def:2,shots:[
+  ['Garage exterior (always)',''],
+  ['Interior, only if tidy',''],
+  ['Summer house, gym, bar, games room','']]},
+ portraits:{label:'Portrait set (coming soon post)',min:5,max:5,def:5,shots:[
+  ['Living room, portrait',''],['Kitchen, portrait',''],['Dining, portrait',''],['Bedroom, portrait',''],['Bathroom, portrait','']]},
+ other:{label:'Other room',min:1,max:2,def:1,shots:[
+  ['Best wide angle','3-wall rule, get into the corner.'],
+  ['Alternative angle','']]}
+};
+var ADD_ORDER=['bedroom','bathroom','ensuite','wc','living','kitchen','dining','utility','balcony','garden','garage','drone','portraits','other','front'];
+
+var S=load(KEY,{jobs:[]}); var CN=load(CKEY,null);
+var view={name:'home'}; var tab='rooms';
+function load(k,d){try{var s=JSON.parse(localStorage.getItem(k)||'null');if(s)return s;}catch(e){}return d;}
+function save(){try{localStorage.setItem(KEY,JSON.stringify(S));}catch(e){toast('Couldn’t save on this phone');}}
+function uid(){return Date.now().toString(36)+Math.random().toString(36).slice(2,6);}
+function esc(s){return String(s==null?'':s).replace(/[&<>"']/g,function(c){return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c];});}
+function norm(s){return String(s||'').toLowerCase().replace(/&/g,'and').replace(/[^a-z0-9]/g,'');}
+function defUploads(type,pkg){var d=T[type].def;return typeof d==='number'?d:d[pkg];}
+function room(type,pkg,name){return {id:uid(),type:type,name:name||T[type].label,uploads:defUploads(type,pkg),ticks:{}};}
+function job(id){for(var i=0;i<S.jobs.length;i++)if(S.jobs[i].id===id)return S.jobs[i];return null;}
+function client(j){if(!CN||!CN.clients||!j.agent)return null;var a=norm(j.agent);
+  for(var i=0;i<CN.clients.length;i++){var c=CN.clients[i];for(var k=0;k<c.match.length;k++)if(a.indexOf(c.match[k])>=0)return c;}return null;}
+function limits(j){var p=PK[j.pkg],c=client(j),mx=c&&c.limits&&c.limits[j.pkg]?c.limits[j.pkg]:p.max;return {min:p.min,max:mx,label:p.label};}
+function shotsFor(r,pkg){return T[r.type].shots.filter(function(s){return !s[2]||pkg==='premium';});}
+function tickCount(r,pkg){var sh=shotsFor(r,pkg),n=0;sh.forEach(function(s,i){if(r.ticks[i])n++;});return [n,sh.length];}
+function totals(j){var up=0,t=0,d=0;j.rooms.forEach(function(r){up+=r.uploads;var c=tickCount(r,j.pkg);d+=c[0];t+=c[1];});return {up:up,done:d,shots:t};}
+function status(j){var l=limits(j),u=totals(j).up;if(u>l.max)return ['over','Over by '+(u-l.max)];if(u<l.min)return ['under',(l.min-u)+' under'];return ['ok','In range'];}
+function when(j){var t=j.when||j.created;try{var d=new Date(t);var s=d.toLocaleDateString('en-GB',{weekday:'short',day:'numeric',month:'short'});if(j.when)s+=' · '+d.toLocaleTimeString('en-GB',{hour:'2-digit',minute:'2-digit'});return s;}catch(e){return '';}}
+function sod(){var d=new Date();d.setHours(0,0,0,0);return d.getTime();}
+
+var app=document.getElementById('app');
+function render(){
+  if(view.name==='home')return renderHome();
+  if(view.name==='new')return renderNew();
+  if(view.name==='import')return renderImport();
+  if(view.name==='job'){var j=job(view.id);if(!j){view={name:'home'};return render();}return renderJob(j);}
+}
+
+function jobCard(j){
+  var t=totals(j),st=status(j),pct=t.shots?Math.round(100*t.done/t.shots):0,c=client(j),past=(j.when||j.created)<sod();
+  return '<button class="card job'+(past?' past':'')+'" data-open="'+j.id+'"><div class="row" style="width:100%"><h2 class="grow trunc">'+esc(j.address||'Untitled job')+'</h2><span class="pill">'+PK[j.pkg].label+'</span></div>'+
+    '<div class="row small" style="width:100%"><span class="grow muted trunc">'+esc(j.agent||'')+'</span>'+(c?'<span class="pill'+(c.priority?' hot':'')+'">'+(c.priority?'Priority':'Client notes')+'</span>':'')+'</div>'+
+    '<div class="bar" style="width:100%"><i style="width:'+pct+'%"></i></div>'+
+    '<div class="row small" style="width:100%"><span class="grow muted">'+when(j)+' · '+t.done+'/'+t.shots+' shots</span><span class="status '+st[0]+'">'+t.up+' uploads</span></div></button>';
+}
+function renderHome(){
+  var h='<div class="top"><div class="row"><h1 class="grow">Shot List</h1><button class="btn" data-act="import">Import</button></div></div>';
+  var list=S.jobs.slice().sort(function(a,b){return (a.when||a.created)-(b.when||b.created);});
+  var up=list.filter(function(j){return (j.when||j.created)>=sod();}),past=list.filter(function(j){return (j.when||j.created)<sod();}).reverse();
+  if(!S.jobs.length)h+='<div class="empty"><h2>No jobs yet</h2><p>Tap <b>Import</b> to bring in shoots from your calendar, or <b>New job</b> to set one up by hand.</p></div>';
+  if(up.length){h+='<h3>Upcoming</h3>';up.forEach(function(j){h+=jobCard(j);});}
+  if(past.length){h+='<h3>Earlier</h3>';past.slice(0,15).forEach(function(j){h+=jobCard(j);});}
+  if(!CN)h+='<p class="small muted">Client notes not loaded yet. Tap <b>Import</b> to add them.</p>';
+  h+='<button class="btn primary fab" data-act="new">+ New job</button>';
+  app.innerHTML=h;
+}
+
+var draft;
+function newDraft(o){return Object.assign({address:'',agent:'',pkg:'standard',beds:2,baths:1,ensuites:0,wc:0,dining:true,utility:false,garden:true,garage:false,drone:false},o||{});}
+function renderNew(){
+  if(!draft)draft=newDraft();
+  var d=draft;
+  function step(k,label){return '<div class="toggle"><span>'+label+'</span><div class="stepper"><button type="button" data-step="'+k+'" data-d="-1" aria-label="Fewer">−</button><b>'+d[k]+'</b><button type="button" data-step="'+k+'" data-d="1" aria-label="More">+</button></div></div>';}
+  function tg(k,label){return '<label class="toggle"><span>'+label+'</span><input type="checkbox" id="tg-'+k+'" data-tg="'+k+'"'+(d[k]?' checked':'')+'></label>';}
+  app.innerHTML='<div class="top"><div class="row"><button class="btn ghost" data-act="home">‹ Jobs</button><h1 class="grow" style="font-size:1.3rem">New job</h1></div></div>'+
+   '<label class="f">Address<input type="text" id="f-address" autocomplete="off" placeholder="1/1, 1 Test Street, Glasgow" value="'+esc(d.address)+'"></label>'+
+   '<label class="f">Estate agent<input type="text" id="f-agent" autocomplete="off" placeholder="PACITTI JONES WEST END" value="'+esc(d.agent)+'"></label>'+
+   '<div class="f">Package<div class="seg" id="f-pkg">'+
+     ['basic','standard','premium'].map(function(p){return '<button type="button" data-pkg="'+p+'" aria-pressed="'+(d.pkg===p)+'">'+PK[p].label+'<br><span class="small muted" style="font-weight:500">'+PK[p].min+'–'+PK[p].max+'</span></button>';}).join('')+'</div></div>'+
+   '<div class="card"><h2 style="margin-bottom:6px">Rooms</h2>'+step('beds','Bedrooms')+step('baths','Bathrooms')+step('ensuites','En-suites')+step('wc','WCs')+
+     tg('dining','Separate dining area')+tg('utility','Utility room')+tg('garden','Garden')+tg('garage','Garage / outbuildings')+tg('drone','Drone & area shots')+'</div>'+
+   '<p class="small muted">Living room, kitchen and front externals are always added. You can add or remove rooms on site.</p>'+
+   '<button class="btn primary fab" data-act="create">Start job</button>';
+}
+function buildRooms(d){
+  var p=d.pkg,r=[room('front',p)];
+  if(d.drone||p==='premium')r.push(room('drone',p));
+  r.push(room('living',p),room('kitchen',p));
+  if(d.dining)r.push(room('dining',p));
+  for(var i=0;i<d.beds;i++)r.push(i===0?room('mainbed',p,'Main bedroom'):room('bedroom',p,'Bedroom '+(i+1)));
+  for(i=0;i<d.ensuites;i++)r.push(room('ensuite',p,d.ensuites>1?'En-suite '+(i+1):'En-suite'));
+  for(i=0;i<d.baths;i++)r.push(room('bathroom',p,d.baths>1?'Bathroom '+(i+1):'Bathroom'));
+  for(i=0;i<d.wc;i++)r.push(room('wc',p,d.wc>1?'WC '+(i+1):'WC'));
+  if(d.utility)r.push(room('utility',p));
+  if(d.garden)r.push(room('garden',p));
+  if(d.garage)r.push(room('garage',p));
+  return r;
+}
+function applyClientRooms(j){var c=client(j);if(!c||!c.addRooms)return;c.addRooms.forEach(function(t){if(!j.rooms.some(function(r){return r.type===t;}))j.rooms.push(room(t,j.pkg));});}
+function createJob(){
+  var d=draft,j={id:uid(),address:d.address.trim(),agent:d.agent.trim(),pkg:d.pkg,created:Date.now(),notes:'',leave:{},rooms:buildRooms(d)};
+  applyClientRooms(j);S.jobs.push(j);save();draft=null;view={name:'job',id:j.id};tab='rooms';render();window.scrollTo(0,0);
+}
+
+/* ---------- Calendar import ---------- */
+function clean(t){
+  t=String(t||'').replace(/<br\s*\/?>/gi,'\n').replace(/<\/(p|div|li)>/gi,'\n').replace(/<[^>]+>/g,'');
+  var ta=document.createElement('textarea');ta.innerHTML=t;t=ta.value;
+  return t.replace(/ /g,' ').replace(/[ \t]+\n/g,'\n').replace(/\n{3,}/g,'\n\n').trim();
+}
+function field(txt,name){var m=txt.match(new RegExp('^[ \\t]*'+name+'[ \\t]*:[ \\t]*(.+)$','im'));return m?m[1].trim():'';}
+function parseDate(s){if(!s)return null;var t=Date.parse(s);if(!isNaN(t))return t;
+  var m=s.match(/(\d{1,2})[\/.\-](\d{1,2})[\/.\-](\d{2,4})(?:[^\d]+(\d{1,2})[:.](\d{2}))?/);
+  if(m){var y=+m[3];if(y<100)y+=2000;return new Date(y,+m[2]-1,+m[1],+(m[4]||9),+(m[5]||0)).getTime();}
+  t=Date.parse(s.replace(/ at /i,' '));return isNaN(t)?null:t;}
+function parseEvents(text){
+  text=String(text||'').replace(/\r/g,'');
+  var blocks=/===EVENT===/.test(text)?text.split('===EVENT===').slice(1):[text];
+  var out=[],skipped=[];
+  blocks.forEach(function(b){
+    var title=field(b,'TITLE'),start=field(b,'START'),notesIdx=b.search(/^[ \t]*NOTES[ \t]*:/im);
+    var body=notesIdx>=0?b.slice(notesIdx).replace(/^[ \t]*NOTES[ \t]*:/i,''):b;
+    body=clean(body);
+    if(!title){var tl=body.split('\n').filter(function(l){return / - /.test(l)&&/package/i.test(l);})[0];title=tl||'';}
+    var parts=title.split(/\s+-\s+/);
+    var address=field(body,'Property Address')||(parts.length>2?parts.slice(2).join(' - '):'');
+    var agent=field(body,'Company')||(parts.length>1?parts[1]:'');
+    var pkgText=(field(body,'Package Details')||'')+' '+(parts[0]||'');
+    var pkg=/premium/i.test(pkgText)?'premium':/standard/i.test(pkgText)?'standard':/basic|lite/i.test(pkgText)?'basic':null;
+    if(!pkg||!address){if(/\s-\s/.test(title))skipped.push(title);return;}
+    var notesList=[],re=/\(NOTE:\s*([\s\S]*?)\)\s*(?=\n|$)/g,m;
+    while((m=re.exec(body)))notesList.push(m[1].replace(/\s+/g,' ').trim());
+    var fi=field(body,'Further Instructions');if(fi)notesList.push(fi);
+    var lines=body.split('\n').map(function(l){return l.trim();}).filter(Boolean);
+    var last=lines[lines.length-1]||'',deliv=/^[A-Z][A-Z \/&]+$/.test(last)&&last.indexOf('/')>=0?last:'';
+    var log=lines.filter(function(l){return /^[A-Z]{2}\s\d{1,2}\/\d{1,2}\b/.test(l);});
+    var beds=(field(body,'Number of Bedrooms')||field(body,'Number of Rooms')).match(/\d+/);
+    out.push({address:address,agent:agent,pkg:pkg,pkgText:(field(body,'Package Details')||parts[0]||'').trim(),
+      when:parseDate(start),title:title,type:field(body,'Property Type'),beds:beds?+beds[0]:null,
+      access:field(body,'Access Arrangements'),contact:field(body,'Client Contact Details')||[field(body,'Client Name'),field(body,'Client Phone Number')].filter(Boolean).join(' - '),
+      staff:field(body,'Staff Name'),branchPhone:field(body,'Branch Contact Number'),branch:field(body,'Branch Address')||field(body,'Branch Location'),
+      instructions:notesList,deliverables:deliv,log:log,teaser:/teaser/i.test(title+' '+pkgText)});
+  });
+  return {jobs:out,skipped:skipped};
+}
+function importText(text){
+  var r=parseEvents(text),added=0,updated=0;
+  r.jobs.forEach(function(e){
+    var ex=S.jobs.filter(function(j){return norm(j.address)===norm(e.address);})[0];
+    var info={type:e.type,beds:e.beds,access:e.access,contact:e.contact,staff:e.staff,branchPhone:e.branchPhone,branch:e.branch,instructions:e.instructions,deliverables:e.deliverables,log:e.log,teaser:e.teaser,pkgText:e.pkgText};
+    if(ex){ex.info=info;if(e.when)ex.when=e.when;ex.agent=e.agent||ex.agent;updated++;return;}
+    var house=/house|cottage|villa|bungalow|detached|terrace/i.test(e.type||'');
+    var d=newDraft({pkg:e.pkg,beds:e.beds!=null?e.beds:2,garden:house,drone:e.pkg==='premium'});
+    var j={id:uid(),address:e.address,agent:e.agent,pkg:e.pkg,created:Date.now(),when:e.when,notes:'',leave:{},info:info,rooms:buildRooms(d)};
+    applyClientRooms(j);S.jobs.push(j);added++;
+  });
+  save();
+  var msg=added+' shoot'+(added===1?'':'s')+' added';if(updated)msg+=', '+updated+' updated';if(r.skipped.length)msg+=', '+r.skipped.length+' skipped (no photos)';
+  if(!added&&!updated&&!r.skipped.length)msg='No shoots found in that text';
+  return msg;
+}
+function renderImport(){
+  var cn=CN?'<span class="status ok">'+CN.clients.length+' clients · updated '+esc(CN.updated||'')+'</span>':'<span class="status under">Not loaded</span>';
+  app.innerHTML='<div class="top"><div class="row"><button class="btn ghost" data-act="home">‹ Jobs</button><h1 class="grow" style="font-size:1.3rem">Import</h1></div></div>'+
+   '<div class="card"><h2>Shoots from your calendar</h2><p class="small muted">Run your “Shot List shoots” Shortcut, then tap below.</p>'+
+   '<button class="btn primary wide" data-act="paste">Paste from clipboard</button>'+
+   '<details style="margin-top:10px"><summary class="small" style="color:var(--accent);font-weight:600">Or paste the text yourself</summary>'+
+   '<textarea id="pastebox" placeholder="Paste a calendar booking here" style="margin-top:8px"></textarea><button class="btn wide" data-act="pastebox" style="margin-top:8px">Import pasted text</button></details></div>'+
+   '<div class="card"><div class="row"><h2 class="grow">Client notes</h2>'+cn+'</div><p class="small muted">Load the <code>client-notes.json</code> file from Files. Re-load it when the Filmworx doc is updated.</p>'+
+   '<button class="btn wide" data-act="loadnotes">Choose client notes file</button></div>'+
+   '<details class="card"><summary><h2>Set up the Shortcut (once)</h2></summary><ol class="steps">'+
+   '<li>Make sure the <b>GREIG</b> calendar shows in the iPhone Calendar app.</li>'+
+   '<li>Shortcuts app → <b>+</b> → name it <b>Shot List shoots</b>.</li>'+
+   '<li>Add <b>Find Calendar Events</b>: Calendar is GREIG, Start Date is in the next 7 days, sort by Start Date.</li>'+
+   '<li>Add <b>Repeat with Each</b> (Calendar Events). Inside it add <b>Text</b>:<br><code>===EVENT===</code><br><code>TITLE: [Repeat Item › Title]</code><br><code>START: [Repeat Item › Start Date, ISO 8601]</code><br><code>NOTES: [Repeat Item › Notes]</code></li>'+
+   '<li>After the repeat, add <b>Combine Text</b> (Repeat Results, New Lines), then <b>Copy to Clipboard</b>.</li>'+
+   '<li>Add it to your Home Screen or say “Hey Siri, Shot List shoots”.</li></ol></details>';
+}
+function readNotesFile(file){
+  var fr=new FileReader();fr.onload=function(){try{var d=JSON.parse(fr.result);if(d.kind!=='filmworx-client-notes'||!d.clients)throw 0;CN=d;localStorage.setItem(CKEY,JSON.stringify(d));toast(d.clients.length+' client notes loaded');render();}catch(e){toast('That isn’t the client notes file');}};fr.readAsText(file);
+}
+
+/* ---------- Job view ---------- */
+var LEAVE=['Every room shot, with spares of the main angles','No duplicates or soft images picked','Garden checked with the client','Office told if more images are needed (while on site)'];
+var RULES='<ul><li><strong>RAW, single exposure.</strong> No JPEG, no brackets.</li><li><strong>3:2</strong> on camera and drone.</li><li>Most frames follow the <strong>3-wall rule</strong>. Get back into the corners.</li><li>Shoot the main frame, check for cut door/window frames, then take an alternative.</li><li><strong>Overshoot.</strong> Keep spares for agent requests, or it’s a revisit.</li><li>Toilet seats down, loo roll tidy, cars off the drive if possible.</li><li>Upload the same day on WiFi with Auto-Submit on, then check it completed.</li></ul>';
+function tel(s){var out=esc(s);return out.replace(/(\+?\d[\d ]{8,}\d)/g,function(n){return '<a href="tel:'+n.replace(/\s/g,'')+'">'+n+'</a>';});}
+function clientCard(j,photoOnly){
+  var c=client(j);if(!c)return '';
+  var ns=c.notes.filter(function(n){return photoOnly?(n.photo||n.key&&!/video|teaser|cubicasa|music|logo/i.test(n.t)):true;});
+  if(!ns.length)return '';
+  return '<div class="card alert"><div class="row"><h2 class="grow">'+esc(c.name)+(photoOnly?': photo notes':'')+'</h2>'+(c.priority?'<span class="pill hot">Priority client</span>':'')+'</div><ul>'+
+    ns.map(function(n){return '<li'+(n.key?' class="key"':'')+'>'+esc(n.t)+'</li>';}).join('')+'</ul></div>';
+}
+function renderJob(j){
+  var cl=client(j);if(cl&&j.clientApplied!==cl.name){applyClientRooms(j);j.clientApplied=cl.name;save();}
+  var t=totals(j),st=status(j),l=limits(j);
+  var h='<div class="top"><div class="row"><button class="btn ghost" data-act="home">‹ Jobs</button><div class="grow" style="min-width:0"><h1 class="trunc" style="font-size:1.2rem">'+esc(j.address||'Untitled job')+'</h1>'+
+    '<div class="small muted trunc">'+(j.agent?esc(j.agent)+' · ':'')+l.label+(j.when?' · '+when(j):'')+'</div></div></div>'+
+    '<div class="meter"><span>Uploads <b>'+t.up+'</b> <span class="muted">of '+l.min+'–'+l.max+'</span></span><span class="status '+st[0]+'">'+st[1]+'</span></div>'+
+    '<div class="tabs">'+[['rooms','Rooms ('+t.done+'/'+t.shots+')'],['info','Info'],['check','Checklist']].map(function(x){return '<button data-tab="'+x[0]+'" aria-pressed="'+(tab===x[0])+'">'+x[1]+'</button>';}).join('')+'</div></div>';
+  if(tab==='rooms'){
+    h+=clientCard(j,true);
+    if(j.info&&j.info.instructions&&j.info.instructions.length)h+='<div class="card"><h2>Office notes</h2><ul class="small" style="margin:6px 0 0;padding-left:18px;display:grid;gap:4px">'+j.info.instructions.map(function(n){return '<li>'+esc(n)+'</li>';}).join('')+'</ul></div>';
+    j.rooms.forEach(function(r){
+      var c=tickCount(r,j.pkg),sh=shotsFor(r,j.pkg),tm=T[r.type],full=c[0]===c[1]&&c[1]>0;
+      h+='<details class="card room'+(full?' done-room':'')+'" data-room="'+r.id+'"'+(r.open!==false&&!full?' open':'')+'><summary><span class="chev">▶</span><h2 class="grow trunc">'+esc(r.name)+'</h2><span class="cnt">'+c[0]+'/'+c[1]+'</span></summary><ul class="shots">';
+      sh.forEach(function(s,i){var id='s-'+r.id+'-'+i;h+='<li><label><input type="checkbox" id="'+id+'" data-tick="'+r.id+'" data-i="'+i+'"'+(r.ticks[i]?' checked':'')+'><span><span class="t">'+esc(s[0])+'</span>'+(s[1]?'<span class="tip">'+esc(s[1])+'</span>':'')+'</span></label></li>';});
+      h+='</ul><div class="roomfoot"><div class="stepper"><span class="small muted">Uploads</span><button type="button" data-up="'+r.id+'" data-d="-1" aria-label="Fewer uploads">−</button><b>'+r.uploads+'</b><button type="button" data-up="'+r.id+'" data-d="1" aria-label="More uploads">+</button></div>'+
+        '<span class="small muted">guide '+(tm.min===tm.max?tm.min:tm.min+'–'+tm.max)+'</span><button class="btn ghost danger small" data-rm="'+r.id+'">Remove</button></div></details>';
+    });
+    h+='<button class="btn" data-act="add" style="border-style:dashed">+ Add room</button>';
+    h+='<details class="card rules"><summary><h2>Every shoot</h2></summary>'+RULES+'</details>';
+  } else if(tab==='info'){
+    var i=j.info||{};
+    var rows=[['When',j.when?when(j):''],['Package',i.pkgText||l.label],['Deliver',i.deliverables],['Property',[i.type,i.beds!=null?i.beds+' bed':''].filter(Boolean).join(', ')],['Access',i.access],['Client',i.contact],['Agent',[j.agent,i.staff].filter(Boolean).join(' · ')],['Branch',[i.branch,i.branchPhone].filter(Boolean).join(' · ')]].filter(function(x){return x[1];});
+    if(rows.length)h+='<div class="card"><h2>Booking</h2><dl>'+rows.map(function(x){return '<dt>'+x[0]+'</dt><dd>'+(x[0]==='Client'||x[0]==='Branch'?tel(x[1]):esc(x[1]))+'</dd>';}).join('')+'</dl></div>';
+    if(i.instructions&&i.instructions.length)h+='<div class="card"><h2>Office notes</h2><ul class="small" style="margin:6px 0 0;padding-left:18px;display:grid;gap:4px">'+i.instructions.map(function(n){return '<li>'+esc(n)+'</li>';}).join('')+'</ul>'+(i.log&&i.log.length?'<p class="small muted" style="margin:8px 0 0">'+i.log.map(esc).join('<br>')+'</p>':'')+'</div>';
+    h+=clientCard(j,false);
+    if(i.teaser)h+='<div class="card"><h2>Teaser video on this order</h2><p class="small muted" style="margin:4px 0 0">Portrait, 40–60 s, best selling points.</p></div>';
+    h+='<label class="f">My notes<textarea id="notes" placeholder="Client requests, key safe, things to tell the office or Esoft…">'+esc(j.notes)+'</textarea></label>'+
+      '<button class="btn" data-act="copy">Copy Esoft summary</button><p class="small muted">Copies agent and address in Esoft’s format, uploads per room and your notes, ready to paste.</p>';
+  } else {
+    h+='<div class="card"><h2>Before you leave</h2><ul class="shots">'+LEAVE.map(function(x,i){return '<li><label><input type="checkbox" id="lv-'+i+'" data-leave="'+i+'"'+(j.leave[i]?' checked':'')+'><span><span class="t">'+esc(x)+'</span></span></label></li>';}).join('')+'</ul></div>'+
+      '<div class="card rules"><h2>Every shoot</h2>'+RULES+'</div>'+
+      '<button class="btn danger" data-act="del">Delete this job</button>';
+  }
+  app.innerHTML=h;
+}
+
+function sheet(html){var bg=document.createElement('div');bg.className='sheet-bg';bg.innerHTML='<div class="sheet" role="dialog" aria-modal="true">'+html+'</div>';bg.addEventListener('click',function(e){if(e.target===bg)bg.remove();});document.body.appendChild(bg);return bg;}
+function addRoomSheet(j){
+  var bg=sheet('<div class="row"><h2 class="grow">Add room</h2><button class="btn ghost" data-close>Close</button></div><div class="grid2">'+
+    ADD_ORDER.map(function(k){return '<button class="btn" data-addtype="'+k+'">'+T[k].label+'</button>';}).join('')+'</div>');
+  bg.addEventListener('click',function(e){
+    if(e.target.closest('[data-close]'))return bg.remove();
+    var b=e.target.closest('[data-addtype]');if(!b)return;
+    var k=b.dataset.addtype,same=j.rooms.filter(function(r){return r.type===k||(k==='bedroom'&&r.type==='mainbed');}).length;
+    var name=T[k].label+(same&&['front','drone','portraits'].indexOf(k)<0?' '+(same+1):'');
+    j.rooms.push(room(k,j.pkg,name));save();bg.remove();render();toast(name+' added');
+  });
+}
+function confirmSheet(msg,yes,fn){
+  var bg=sheet('<h2>'+esc(msg)+'</h2><div class="grid2"><button class="btn" data-no>Cancel</button><button class="btn primary" data-yes style="text-align:center">'+esc(yes)+'</button></div>');
+  bg.addEventListener('click',function(e){if(e.target.closest('[data-no]'))bg.remove();if(e.target.closest('[data-yes]')){bg.remove();fn();}});
+}
+var tt;function toast(m){var o=document.querySelector('.toast');if(o)o.remove();var d=document.createElement('div');d.className='toast';d.setAttribute('role','status');d.textContent=m;document.body.appendChild(d);clearTimeout(tt);tt=setTimeout(function(){d.remove();},2600);}
+function summary(j){
+  var t=totals(j),l=limits(j),L=[(j.agent?j.agent.toUpperCase()+' - ':'')+(j.address||'Untitled job'),l.label+' package · '+t.up+' photos (limit '+l.min+'–'+l.max+')',''];
+  j.rooms.forEach(function(r){if(r.uploads)L.push(r.name+': '+r.uploads);});
+  if(j.notes.trim())L.push('','Notes:',j.notes.trim());
+  return L.join('\n');
+}
+function copyText(txt){
+  if(navigator.clipboard&&navigator.clipboard.writeText){navigator.clipboard.writeText(txt).then(function(){toast('Copied');},function(){fallbackCopy(txt);});}else fallbackCopy(txt);
+}
+function fallbackCopy(txt){var ta=document.createElement('textarea');ta.value=txt;ta.style.position='fixed';ta.style.opacity='0';document.body.appendChild(ta);ta.select();try{document.execCommand('copy');toast('Copied');}catch(e){toast('Copy failed');}ta.remove();}
+
+document.addEventListener('click',function(e){
+  var el=e.target.closest('[data-act],[data-open],[data-pkg],[data-step],[data-tab],[data-up],[data-rm]');if(!el)return;
+  var j=view.name==='job'?job(view.id):null;
+  if(el.dataset.open){view={name:'job',id:el.dataset.open};tab='rooms';render();window.scrollTo(0,0);return;}
+  if(el.dataset.pkg){draft.pkg=el.dataset.pkg;render();return;}
+  if(el.dataset.step){var k=el.dataset.step;draft[k]=Math.max(0,Math.min(9,draft[k]+(+el.dataset.d)));render();return;}
+  if(el.dataset.tab){tab=el.dataset.tab;render();window.scrollTo(0,0);return;}
+  if(el.dataset.up&&j){var r=j.rooms.filter(function(x){return x.id===el.dataset.up;})[0];r.uploads=Math.max(0,Math.min(20,r.uploads+(+el.dataset.d)));save();render();return;}
+  if(el.dataset.rm&&j){var rr=j.rooms.filter(function(x){return x.id===el.dataset.rm;})[0];confirmSheet('Remove '+rr.name+'?','Remove',function(){j.rooms=j.rooms.filter(function(x){return x!==rr;});save();render();});return;}
+  var a=el.dataset.act;
+  if(a==='home'){view={name:'home'};render();window.scrollTo(0,0);}
+  else if(a==='new'){draft=null;view={name:'new'};render();window.scrollTo(0,0);}
+  else if(a==='import'){view={name:'import'};render();window.scrollTo(0,0);}
+  else if(a==='create'){createJob();}
+  else if(a==='add'&&j){addRoomSheet(j);}
+  else if(a==='del'&&j){confirmSheet('Delete this job? This can’t be undone.','Delete',function(){S.jobs=S.jobs.filter(function(x){return x!==j;});save();view={name:'home'};render();});}
+  else if(a==='copy'&&j){copyText(summary(j));}
+  else if(a==='paste'){
+    if(navigator.clipboard&&navigator.clipboard.readText){navigator.clipboard.readText().then(function(t){var m=importText(t);toast(m);if(/added|updated/.test(m)){view={name:'home'};render();}},function(){toast('Couldn’t read the clipboard. Paste into the box instead.');var d=document.querySelector('#pastebox');if(d){d.closest('details').open=true;d.focus();}});}
+    else{toast('Paste into the box below instead.');}
+  }
+  else if(a==='pastebox'){var tx=document.getElementById('pastebox').value;var m2=importText(tx);toast(m2);if(/added|updated/.test(m2)){view={name:'home'};render();}}
+  else if(a==='loadnotes'){document.getElementById('notesfile').click();}
+});
+document.getElementById('notesfile').addEventListener('change',function(e){var f=e.target.files&&e.target.files[0];if(f)readNotesFile(f);e.target.value='';});
+document.addEventListener('change',function(e){
+  var el=e.target,j=view.name==='job'?job(view.id):null;
+  if(el.dataset.tg){draft[el.dataset.tg]=el.checked;return;}
+  if(el.dataset.tick&&j){var r=j.rooms.filter(function(x){return x.id===el.dataset.tick;})[0];r.ticks[el.dataset.i]=el.checked;
+    var c=tickCount(r,j.pkg);save();if(c[0]===c[1]){r.open=false;render();}else{var det=el.closest('details');det.querySelector('.cnt').textContent=c[0]+'/'+c[1];updateTabCount(j);}return;}
+  if(el.dataset.leave&&j){j.leave[el.dataset.leave]=el.checked;save();}
+});
+document.addEventListener('toggle',function(e){var d=e.target;if(!d.dataset||!d.dataset.room||view.name!=='job')return;var j=job(view.id);var r=j.rooms.filter(function(x){return x.id===d.dataset.room;})[0];if(r)r.open=d.open;save();},true);
+function updateTabCount(j){var b=document.querySelector('[data-tab=rooms]');if(b){var t=totals(j);b.textContent='Rooms ('+t.done+'/'+t.shots+')';}}
+document.addEventListener('input',function(e){
+  if(e.target.id==='notes'){var j=job(view.id);j.notes=e.target.value;save();}
+  if(e.target.id==='f-address')draft.address=e.target.value;
+  if(e.target.id==='f-agent')draft.agent=e.target.value;
+});
+
+window.ShotList={parseEvents:parseEvents};
+render();
+if('serviceWorker' in navigator&&location.protocol!=='file:'){navigator.serviceWorker.register('sw.js').catch(function(){});}
+})();
+</script>
+</body>
+</html>
